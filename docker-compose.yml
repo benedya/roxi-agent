@@ -1,0 +1,101 @@
+# Local Postgres that stores eve sessions (workflow runs, events, steps, streams).
+# Every resource is prefixed with "roxi-agent" so it can't collide with other Compose projects.
+# Credentials come from .env.local: run it through `make`, or pass `--env-file .env.local`.
+name: roxi-agent
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: roxi-agent-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER:?set DB_USER in .env.local}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?set DB_PASSWORD in .env.local}
+      POSTGRES_DB: ${DB_NAME:?set DB_NAME in .env.local}
+    ports:
+      # 5434 on the host to stay clear of other local Postgres instances.
+      - "127.0.0.1:${DB_PORT:-5434}:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - default
+    labels:
+      com.roxi-agent.service: postgres
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 2s
+      timeout: 3s
+      retries: 15
+
+  # eve dev without the TUI; open one with `make tui`.
+  agent:
+    image: node:24-slim
+    container_name: roxi-agent-agent
+    working_dir: /app
+    depends_on:
+      postgres:
+        condition: service_healthy
+    env_file: .env.local
+    environment:
+      # Inside the network Postgres is "postgres:5432", not the host port from .env.local.
+      EVE_LOGS: ${EVE_LOGS:-all}
+      NPM_CONFIG_UPDATE_NOTIFIER: "false"
+      DATABASE_URL: postgres://${DB_USER}:${DB_PASSWORD}@postgres:5432/${DB_NAME}
+    command:
+      - sh
+      - -ec
+      # No bundled dev extensions: otherwise anyone chatting with the bot could ask it to rewrite agent/.
+      - >-
+        sh scripts/install-deps.sh &&
+        npx --no-install bootstrap >/dev/null &&
+        npm run --silent db:migrate &&
+        exec npx eve dev --no-ui --host 0.0.0.0 --port 2000
+        --logs "$$EVE_LOGS" --no-default-extensions
+    ports:
+      # EVE_PORT on the host; the agent listens on 2000 inside the network.
+      - "127.0.0.1:${EVE_PORT:-2000}:2000"
+    volumes:
+      - .:/app
+      # Linux dependencies and eve state stay in the container, apart from the host's.
+      - node-modules:/app/node_modules
+      - eve-state:/app/.eve
+    labels:
+      com.roxi-agent.service: agent
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:2000/').then(r => process.exit(r.ok ? 0 : 1), () => process.exit(1))"]
+      interval: 2s
+      timeout: 3s
+      retries: 60
+      # Leaves time for npm ci on the first start.
+      start_period: 180s
+
+  # Long-polls Telegram and forwards updates to the agent (scripts/telegram-poll.ts).
+  telegram-poll:
+    image: node:24-slim
+    container_name: roxi-agent-telegram-poll
+    working_dir: /app
+    restart: unless-stopped
+    depends_on:
+      agent:
+        condition: service_healthy
+    env_file: .env.local
+    environment:
+      EVE_URL: http://agent:2000
+    command: ["node", "scripts/telegram-poll.ts"]
+    volumes:
+      - .:/app
+      - node-modules:/app/node_modules
+    labels:
+      com.roxi-agent.service: telegram-poll
+
+volumes:
+  postgres-data:
+    name: roxi-agent-postgres-data
+  node-modules:
+    name: roxi-agent-node-modules
+  eve-state:
+    name: roxi-agent-eve-state
+
+networks:
+  default:
+    name: roxi-agent-network

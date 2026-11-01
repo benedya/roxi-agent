@@ -1,0 +1,46 @@
+{
+  "name": "roxi-agent",
+  "version": "0.0.0",
+  "type": "module",
+  "imports": {
+    "#*": "./agent/*",
+    "#core/*": "./agent/lib/core/*.ts",
+    "#evals/*": "./evals/*"
+  },
+  "scripts": {
+    "build": "eve build",
+    "deploy": "eve deploy",
+    "dev": "eve dev",
+    "eval": "eve eval",
+    "start": "eve start",
+    "typecheck": "tsc",
+    "telegram:poll": "node scripts/telegram-poll.ts",
+    "db:migrate": "node scripts/db-migrate.ts",
+    "lint": "biome lint",
+    "lint:fix": "biome lint --write"
+  },
+  "dependencies": {
+    "@ai-sdk/deepseek": "^3.0.62",
+    "@ai-sdk/openai": "4.0.90",
+    "@vercel/connect": "2.2.0",
+    "@workflow/world-postgres": "5.0.2",
+    "ai": "^7.0.128",
+    "eve": "^0.74.0",
+    "inversify": "^8.2.3",
+    "pg": "^8.23.1",
+    "pino": "^10.4.0",
+    "typeorm": "^1.1.2",
+    "zod": "4.5.4"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.6.2",
+    "@types/node": "24.x",
+    "@types/pg": "^8.23.1",
+    "just-bash": "^3.6.0",
+    "pino-pretty": "^13.2.0",
+    "typescript": "7.0.2"
+  },
+  "engines": {
+    "node": "24.x"
+  }
+}
