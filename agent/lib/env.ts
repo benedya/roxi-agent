@@ -14,6 +14,9 @@ const EnvSchema = z.object({
   NOTE_SUMMARY_MODEL: z.string().min(1),
   NOTE_SUMMARY_MODEL_API_KEY: z.string().min(1),
 
+  // The most notes a group can keep; members delete old notes to save new ones.
+  MAX_NOTES_PER_GROUP: z.coerce.number().int().positive().default(100),
+
   TELEGRAM_BOT_USERNAME: z.string().min(1).optional(),
   TELEGRAM_BOT_TOKEN: z.string().min(1),
 

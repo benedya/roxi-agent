@@ -17,3 +17,6 @@ export type NoteListEntry = {
 
 /** Outcome of an edit or delete: only the note's author and the group's admins may change a note. */
 export type NoteChangeResult = "done" | "not_found" | "forbidden";
+
+/** Outcome of a save: refused when the group already has the most notes it can keep. */
+export type SaveNoteResult = "saved" | "limit_reached";

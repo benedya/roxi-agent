@@ -2,6 +2,7 @@ import { defineTool } from "eve/tools";
 import { z } from "zod";
 import { resolve } from "../lib/container.ts";
 import { SaveNoteService } from "#core/services/notes/save-note.service";
+import { env } from "../lib/env.ts";
 import { getGroupCaller, NOT_IN_GROUP_ERROR } from "../lib/telegram/group-caller.ts";
 
 export default defineTool({
@@ -19,8 +20,15 @@ export default defineTool({
     }
 
     const saveNoteService = await resolve(SaveNoteService);
-    await saveNoteService.save(caller.groupId, caller.telegramUserId, content);
+    const result = await saveNoteService.save(caller.groupId, caller.telegramUserId, content);
 
-    return { saved: true };
+    switch (result) {
+      case "saved":
+        return { saved: true };
+      case "limit_reached":
+        return {
+          error: `This group already has ${env.MAX_NOTES_PER_GROUP} notes, the most it can keep. Delete an old note to save a new one.`,
+        };
+    }
   },
 });

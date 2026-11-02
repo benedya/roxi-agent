@@ -27,6 +27,7 @@ import { NoteRepository } from "#core/repositories/note.repository";
 import { UserRepository } from "#core/repositories/user.repository";
 import { TelegramMessageHandler } from "./telegram/telegram-message.handler.ts";
 import { createLogger, LOGGER, type Logger } from "./logger.ts";
+import { env } from "./env.ts";
 
 export function createContainer(): Container {
   const container = new Container({ defaultScope: "Singleton" });
@@ -85,7 +86,7 @@ export function createContainer(): Container {
     .bind(SaveNoteService)
     .toResolvedValue(
       (noteRepository: NoteRepository, userRepository: UserRepository, noteContentService: NoteContentService) =>
-        new SaveNoteService(noteRepository, userRepository, noteContentService),
+        new SaveNoteService(noteRepository, userRepository, noteContentService, env.MAX_NOTES_PER_GROUP),
       [NoteRepository, UserRepository, NoteContentService],
     );
   container
