@@ -20,6 +20,16 @@ export class GroupRepository {
     return this.manager.findOneBy(GroupEntitySchema, { id });
   }
 
+  async getById(id: number): Promise<GroupEntity> {
+    const group = await this.findById(id);
+
+    if (!group) {
+      throw new Error(`Group ${id} not found.`);
+    }
+
+    return group;
+  }
+
   /** Groups the user is an admin of, most recently linked first. */
   findByAdminTelegramId(telegramId: string): Promise<GroupEntity[]> {
     return this.manager

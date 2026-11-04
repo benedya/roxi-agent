@@ -1,4 +1,5 @@
 import type { EntityManager } from "typeorm";
+import { GroupMemberEntitySchema } from "#core/entities/group-member.entity";
 import { UserEntitySchema, type UserEntity } from "#core/entities/user.entity";
 import { APP_SCHEMA } from "#core/db/schema";
 import type { TelegramProfile } from "#core/types/telegram";
@@ -17,6 +18,25 @@ export class UserRepository {
 
   findByTelegramId(telegramId: string): Promise<UserEntity | null> {
     return this.manager.findOneBy(UserEntitySchema, { telegramId });
+  }
+
+  async getByTelegramId(telegramId: string): Promise<UserEntity> {
+    const user = await this.findByTelegramId(telegramId);
+
+    if (!user) {
+      throw new Error(`User ${telegramId} not found.`);
+    }
+
+    return user;
+  }
+
+  /** Users who are members of the group. */
+  findGroupMembers(groupId: number): Promise<UserEntity[]> {
+    return this.manager
+      .createQueryBuilder(UserEntitySchema, "user")
+      .innerJoin(GroupMemberEntitySchema.options.name, "member", "member.userId = user.id")
+      .where("member.groupId = :groupId", { groupId })
+      .getMany();
   }
 
   /** Inserts or refreshes a user from their Telegram profile. */

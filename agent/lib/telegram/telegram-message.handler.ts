@@ -2,6 +2,7 @@ import { defaultTelegramAuth, type TelegramInboundResult, type TelegramMessage }
 import type { GroupAccessService } from "#core/services/groups/group-access.service";
 import type { GroupMembershipService } from "#core/services/groups/group-membership.service";
 import type { Logger } from "../logger.ts";
+import type { AssignmentAnswerHandler } from "./assignment-answer.handler.ts";
 import type { BotAddedHandler } from "./bot-added.handler.ts";
 import { isAddressedToBot } from "./addressing.ts";
 import type { TelegramGateway } from "./telegram.gateway.ts";
@@ -9,24 +10,28 @@ import type { TelegramGateway } from "./telegram.gateway.ts";
 /**
  * Entry point for inbound Telegram messages. The bot joining a chat is handled in
  * code: the chat gets a group owned by whoever added the bot, and a welcome message.
- * Private chats always reach the agent, with the sender's admin groups as context.
+ * Private chats reach the agent, with the sender's admin groups as context, unless the sender
+ * has an open assignment: then the message is an answer, handled in code.
  * In group chats only messages addressed to the bot from a registered group reach
  * the agent; the rest are dropped silently.
  * Whoever addresses the bot in a group chat becomes a member of that group.
  */
 export class TelegramMessageHandler {
   private readonly botAddedHandler: BotAddedHandler;
+  private readonly assignmentAnswerHandler: AssignmentAnswerHandler;
   private readonly groupAccessService: GroupAccessService;
   private readonly groupMembershipService: GroupMembershipService;
   private readonly logger: Logger;
 
   constructor(
     botAddedHandler: BotAddedHandler,
+    assignmentAnswerHandler: AssignmentAnswerHandler,
     groupAccessService: GroupAccessService,
     groupMembershipService: GroupMembershipService,
     logger: Logger,
   ) {
     this.botAddedHandler = botAddedHandler;
+    this.assignmentAnswerHandler = assignmentAnswerHandler;
     this.groupAccessService = groupAccessService;
     this.groupMembershipService = groupMembershipService;
     this.logger = logger;
@@ -63,6 +68,10 @@ export class TelegramMessageHandler {
     }
 
     if (message.chat.type === "private") {
+      if (await this.assignmentAnswerHandler.handle(message)) {
+        return null;
+      }
+
       const groups = await this.groupAccessService.listGroupsForPrivateChat(from.id);
       const groupNames = groups.map((group) => group.chatTitle ?? group.name);
 
