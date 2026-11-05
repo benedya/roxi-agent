@@ -4,20 +4,22 @@ import type { GroupMembershipService } from "#core/services/groups/group-members
 import type { Logger } from "../logger.ts";
 import type { AssignmentAnswerHandler } from "./assignment-answer.handler.ts";
 import type { BotAddedHandler } from "./bot-added.handler.ts";
+import type { CancelCommandHandler } from "./cancel-command.handler.ts";
 import { isAddressedToBot } from "./addressing.ts";
 import type { TelegramGateway } from "./telegram.gateway.ts";
 
 /**
  * Entry point for inbound Telegram messages. The bot joining a chat is handled in
  * code: the chat gets a group owned by whoever added the bot, and a welcome message.
- * Private chats reach the agent, with the sender's admin groups as context, unless the sender
- * has an open assignment: then the message is an answer, handled in code.
+ * Private chats reach the agent, with the sender's admin groups as context, except /cancel
+ * and, while the sender has an open assignment, their answers: both are handled in code.
  * In group chats only messages addressed to the bot from a registered group reach
  * the agent; the rest are dropped silently.
  * Whoever addresses the bot in a group chat becomes a member of that group.
  */
 export class TelegramMessageHandler {
   private readonly botAddedHandler: BotAddedHandler;
+  private readonly cancelCommandHandler: CancelCommandHandler;
   private readonly assignmentAnswerHandler: AssignmentAnswerHandler;
   private readonly groupAccessService: GroupAccessService;
   private readonly groupMembershipService: GroupMembershipService;
@@ -25,12 +27,14 @@ export class TelegramMessageHandler {
 
   constructor(
     botAddedHandler: BotAddedHandler,
+    cancelCommandHandler: CancelCommandHandler,
     assignmentAnswerHandler: AssignmentAnswerHandler,
     groupAccessService: GroupAccessService,
     groupMembershipService: GroupMembershipService,
     logger: Logger,
   ) {
     this.botAddedHandler = botAddedHandler;
+    this.cancelCommandHandler = cancelCommandHandler;
     this.assignmentAnswerHandler = assignmentAnswerHandler;
     this.groupAccessService = groupAccessService;
     this.groupMembershipService = groupMembershipService;
@@ -68,6 +72,10 @@ export class TelegramMessageHandler {
     }
 
     if (message.chat.type === "private") {
+      if (await this.cancelCommandHandler.handle(message, botUsername, telegram)) {
+        return null;
+      }
+
       if (await this.assignmentAnswerHandler.handle(message)) {
         return null;
       }

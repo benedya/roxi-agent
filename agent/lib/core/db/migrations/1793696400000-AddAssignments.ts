@@ -5,7 +5,7 @@ export class AddAssignments1793696400000 implements MigrationInterface {
   name = "AddAssignments1793696400000";
 
   async up(queryRunner: QueryRunner): Promise<void> {
-    await queryRunner.query(`CREATE TYPE ${APP_SCHEMA}.assignment_status AS ENUM ('open', 'completed')`);
+    await queryRunner.query(`CREATE TYPE ${APP_SCHEMA}.assignment_status AS ENUM ('open', 'completed', 'cancelled')`);
 
     await queryRunner.query(`
       CREATE TABLE ${APP_SCHEMA}.assignments (
@@ -18,10 +18,12 @@ export class AddAssignments1793696400000 implements MigrationInterface {
         source_message_id bigint      NOT NULL,
         created_at        timestamptz NOT NULL DEFAULT now(),
         completed_at      timestamptz,
+        cancelled_at      timestamptz,
         CONSTRAINT assignments_group_id_fkey FOREIGN KEY (group_id) REFERENCES ${APP_SCHEMA}.groups (id) ON DELETE CASCADE,
         CONSTRAINT assignments_assigner_user_id_fkey FOREIGN KEY (assigner_user_id) REFERENCES ${APP_SCHEMA}.users (id) ON DELETE CASCADE,
         CONSTRAINT assignments_assignee_user_id_fkey FOREIGN KEY (assignee_user_id) REFERENCES ${APP_SCHEMA}.users (id) ON DELETE CASCADE,
-        CONSTRAINT assignments_completed_at_check CHECK ((status = 'completed') = (completed_at IS NOT NULL))
+        CONSTRAINT assignments_completed_at_check CHECK ((status = 'completed') = (completed_at IS NOT NULL)),
+        CONSTRAINT assignments_cancelled_at_check CHECK ((status = 'cancelled') = (cancelled_at IS NOT NULL))
       )
     `);
     // At most one open assignment per assignee: their private chat answers only that one.

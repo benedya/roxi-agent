@@ -66,6 +66,17 @@ export class AssignmentRepository {
     return (result.affected ?? 0) > 0;
   }
 
+  /** Cancels the assignment; returns false when it was no longer open. */
+  async markCancelled(id: number): Promise<boolean> {
+    const result = await this.manager
+      .createQueryBuilder()
+      .update(AssignmentEntitySchema)
+      .set({ status: AssignmentStatus.Cancelled, cancelledAt: () => "now()" })
+      .where("id = :id AND status = :status", { id, status: AssignmentStatus.Open })
+      .execute();
+    return (result.affected ?? 0) > 0;
+  }
+
   async delete(id: number): Promise<void> {
     await this.manager.delete(AssignmentEntitySchema, { id });
   }

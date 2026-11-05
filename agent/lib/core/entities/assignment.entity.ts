@@ -7,6 +7,7 @@ import type { UserEntity } from "#core/entities/user.entity";
 export const AssignmentStatus = {
   Open: "open",
   Completed: "completed",
+  Cancelled: "cancelled",
 } as const;
 
 export type AssignmentStatus = (typeof AssignmentStatus)[keyof typeof AssignmentStatus];
@@ -29,6 +30,7 @@ export interface AssignmentEntity {
   sourceMessageId: string;
   createdAt: Date;
   completedAt: Date | null;
+  cancelledAt: Date | null;
 }
 
 export const AssignmentEntitySchema = new EntitySchema<AssignmentEntity>({
@@ -50,6 +52,7 @@ export const AssignmentEntitySchema = new EntitySchema<AssignmentEntity>({
     sourceMessageId: { type: "bigint", name: "source_message_id" },
     createdAt: { type: "timestamptz", name: "created_at", createDate: true },
     completedAt: { type: "timestamptz", name: "completed_at", nullable: true },
+    cancelledAt: { type: "timestamptz", name: "cancelled_at", nullable: true },
   },
   relations: {
     group: {
@@ -75,6 +78,10 @@ export const AssignmentEntitySchema = new EntitySchema<AssignmentEntity>({
     {
       name: "assignments_completed_at_check",
       expression: `(status = '${AssignmentStatus.Completed}') = (completed_at IS NOT NULL)`,
+    },
+    {
+      name: "assignments_cancelled_at_check",
+      expression: `(status = '${AssignmentStatus.Cancelled}') = (cancelled_at IS NOT NULL)`,
     },
   ],
   indices: [

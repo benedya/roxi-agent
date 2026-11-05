@@ -64,7 +64,7 @@ export default defineTool({
         return { error: "Several members match this name; ask which one is meant.", candidates: result.candidates };
       case "assignee_busy":
         return {
-          error: `${result.assigneeName} already has an unfinished assignment; they must finish it before getting a new one.`,
+          error: `${result.assigneeName} already has an unfinished assignment; they must finish or cancel it before getting a new one.`,
         };
       case "assignee_unreachable":
         return {

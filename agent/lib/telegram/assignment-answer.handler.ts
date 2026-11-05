@@ -1,5 +1,5 @@
-// While a user has an open assignment, every message in their private chat with the bot is an
-// answer: it is handled in code and never reaches the agent.
+// While a user has an open assignment, every message in their private chat with the bot except
+// /cancel is an answer: it is handled in code and never reaches the agent.
 
 import type { TelegramMessage } from "eve/channels/telegram";
 import type { Logger } from "../logger.ts";
