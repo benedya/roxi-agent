@@ -19,7 +19,13 @@ Import core files through the `#core/*` alias (`package.json` `imports`), never 
 
 No barrel files (an `index.ts` that re-exports a folder): import each file directly.
 
+A function used only within its own file is not exported.
+
 Type and interface names have no `interface` suffix: use `Note`, not `NoteInterface`.
+
+## Commits
+
+Commit messages are one short, clear line, with no body or additional details.
 
 ## Naming: `find` vs `get`
 

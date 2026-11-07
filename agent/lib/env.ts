@@ -17,6 +17,9 @@ const EnvSchema = z.object({
   // The most notes a group can keep; members delete old notes to save new ones.
   MAX_NOTES_PER_GROUP: z.coerce.number().int().positive().default(100),
 
+  // Share of the model's context window (0-1) at which a session's older turns are summarized.
+  COMPACTION_THRESHOLD_PERCENT: z.coerce.number().min(0).max(1).default(0.5),
+
   TELEGRAM_BOT_USERNAME: z.string().min(1).optional(),
   TELEGRAM_BOT_TOKEN: z.string().min(1),
 
