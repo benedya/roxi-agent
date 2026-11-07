@@ -5,6 +5,8 @@
 // columns; pg returns them as strings, so they are typed as string.
 
 import { DataSource } from "typeorm";
+import { AssignmentEntitySchema } from "#core/entities/assignment.entity";
+import { AssignmentItemEntitySchema } from "#core/entities/assignment-item.entity";
 import { GroupEntitySchema } from "#core/entities/group.entity";
 import { GroupMemberEntitySchema } from "#core/entities/group-member.entity";
 import { NoteEntitySchema } from "#core/entities/note.entity";
@@ -19,7 +21,14 @@ export function createDataSource(url = process.env.DATABASE_URL): DataSource {
     type: "postgres",
     url,
     schema: APP_SCHEMA,
-    entities: [UserEntitySchema, GroupEntitySchema, GroupMemberEntitySchema, NoteEntitySchema],
+    entities: [
+      UserEntitySchema,
+      GroupEntitySchema,
+      GroupMemberEntitySchema,
+      NoteEntitySchema,
+      AssignmentEntitySchema,
+      AssignmentItemEntitySchema,
+    ],
     migrations: [`${import.meta.dirname}/migrations/*.ts`],
     migrationsTableName: "migrations",
     synchronize: false,

@@ -13,7 +13,7 @@ AGENT_RUN_DB := $(COMPOSE) run --rm agent $(AGENT_CMD)
 # Which logs eve dev shows: none | error | warn | debug | all ("all" includes the app's pino logs).
 export EVE_LOGS ?= all
 
-.PHONY: run up down logs tui db-setup db-migrate db-shell install typecheck lint
+.PHONY: run up down logs tui db-setup db-migrate db-shell install typecheck lint help
 
 ## run: start Postgres, eve dev and the Telegram relay, following their logs (Ctrl-C stops them)
 run:
@@ -52,8 +52,14 @@ db-shell:
 install:
 	@$(COMPOSE) run --rm --no-deps agent sh scripts/install-deps.sh --force
 
+## typecheck: check the project's types
 typecheck:
 	@$(AGENT_RUN) npm run --silent typecheck
 
+## lint: run the linter
 lint:
 	@$(AGENT_RUN) npm run --silent lint
+
+## help: list the available commands
+help:
+	@awk -F': ' '/^## / { printf "  %-12s %s\n", substr($$1, 4), substr($$0, length($$1) + 3) }' $(firstword $(MAKEFILE_LIST))

@@ -4,16 +4,14 @@ Roxi is an open-source AI agent for group chats. Add it to a Telegram group, and
 
 Anyone can install Roxi and run their own Telegram bot powered by it.
 
-<p align="center">
-  <img src="docs/demo.gif" alt="Roxi saving, recalling and editing a note in a Telegram group chat" width="420">
-</p>
-
-> **Note:** Roxi is in active development, so some features may be unstable or change.
+> [!WARNING]
+> Roxi is an experimental hobby project in active development, so some features may be unstable or change. To try it out, use a [tagged version](https://github.com/benedya/roxi-agent/tags) rather than the latest code.
 
 ## Features
 
-- **Group instructions:** group admins can set how Roxi behaves in their chat, such as its tone, language, or response format.
-- **Notes:** members can ask Roxi to save notes and later remind them. Notes can be added, listed, searched, edited, and removed.
+- **Group instructions:** group admins can set how Roxi behaves in their chat, such as its tone, language, or response format. [See it in action](docs/examples/group-instructions.md)
+- **Notes:** members can ask Roxi to save notes and later remind them. Notes can be added, listed, searched, edited, and removed. [See it in action](docs/examples/notes.md)
+- **Assignments:** members can ask Roxi to give another member a set of questions or steps. Roxi sends them in a private chat and posts the result in the group. [See it in action](docs/examples/assignments.md)
 
 More features are coming.
 
@@ -48,15 +46,30 @@ You need [Docker](https://docs.docker.com/get-docker/), a Telegram bot token, an
 
 5. Add the bot to a Telegram group. Mention it by its @username or reply to its messages to talk to it.
 
-### Other commands
+## Technical details
 
-| Command | What it does |
+### One session per group
+
+All messages addressed to Roxi in a group go into one long-lived session, so Roxi remembers earlier conversations and can follow what any member said before.
+
+- **Addressed messages only:** mentions, replies to Roxi, and commands reach the session. Other group messages are ignored.
+- **Messages are queued:** when several members write at once, Roxi handles their messages in order, so one member doesn't interrupt another.
+- **Forum topics:** in a group with topics, each topic has its own session.
+- **Private chats:** each member's private chat with Roxi has its own session, separate from the group's.
+- **No expiry:** sessions are stored in Postgres and don't time out.
+
+### Compaction
+
+A session's history is sent to the model on every turn, so it grows and costs more over time. To keep it in check, Roxi compacts the session: when it reaches a set share of the model's context window, the older turns are replaced by a summary written by the main model (`AGENT_MODEL`).
+
+Details that the summary leaves out are no longer available to Roxi in the conversation. Saved notes aren't affected, because they are stored separately.
+
+To adjust when compaction happens, set `COMPACTION_THRESHOLD_PERCENT` in `.env.local` to a value from 0 to 1 (default: `0.5`), then restart the agent:
+
+| Value | Effect |
 | --- | --- |
-| `make up` | Start everything in the background |
-| `make down` | Stop all containers (data is kept) |
-| `make logs` | Follow the agent logs |
-| `make tui` | Open the eve terminal UI against the running agent |
-| `make db-migrate` | Apply pending database migrations |
+| Lower | Compacts sooner: less history is sent on each turn, so turns use fewer tokens, but less of the conversation is kept word for word |
+| Higher | Compacts later: more of the conversation is kept word for word, but turns use more tokens |
 
 ## Built with
 
