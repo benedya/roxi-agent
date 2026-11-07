@@ -1,10 +1,10 @@
 import { telegramChannel } from "eve/channels/telegram";
-import { resolve } from "../lib/container.ts";
-import { env } from "../lib/env.ts";
-import { LOGGER, type Logger } from "../lib/logger.ts";
-import { shareSessionPerGroup } from "../lib/telegram/group-session.ts";
-import { TelegramGateway } from "../lib/telegram/telegram.gateway.ts";
-import { TelegramMessageHandler } from "../lib/telegram/telegram-message.handler.ts";
+import { resolve } from "#lib/container";
+import { env } from "#lib/env";
+import { LOGGER, type Logger } from "#lib/logger";
+import { shareSessionPerGroup } from "#lib/telegram/group-session";
+import { TelegramGateway } from "#lib/telegram/telegram.gateway";
+import { TelegramMessageHandler } from "#lib/telegram/telegram-message.handler";
 
 export default shareSessionPerGroup(
   telegramChannel({

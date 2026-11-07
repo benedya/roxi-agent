@@ -39,15 +39,21 @@ export class UserRepository {
       .getMany();
   }
 
-  /** Inserts or refreshes a user from their Telegram profile. */
+  /** Inserts or refreshes a user from their Telegram profile; a profile without a language keeps the saved one. */
   async upsertFromTelegram(profile: TelegramProfile): Promise<void> {
     await this.manager.query(
-      `INSERT INTO ${APP_SCHEMA}.users (telegram_id, username, first_name)
-       VALUES ($1, $2, $3)
+      `INSERT INTO ${APP_SCHEMA}.users (telegram_id, username, first_name, language_code)
+       VALUES ($1, $2, $3, $4)
        ON CONFLICT (telegram_id) DO UPDATE SET
          username = EXCLUDED.username,
-         first_name = EXCLUDED.first_name`,
-      [profile.telegramId, profile.username ?? null, profile.firstName ?? null],
+         first_name = EXCLUDED.first_name,
+         language_code = COALESCE(EXCLUDED.language_code, ${APP_SCHEMA}.users.language_code)`,
+      [profile.telegramId, profile.username ?? null, profile.firstName ?? null, profile.languageCode ?? null],
     );
+  }
+
+  /** Changes the language of an existing user; does nothing for an unknown one. */
+  async updateLanguage(telegramId: string, languageCode: string): Promise<void> {
+    await this.manager.update(UserEntitySchema, { telegramId }, { languageCode });
   }
 }

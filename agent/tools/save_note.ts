@@ -1,9 +1,9 @@
 import { defineTool } from "eve/tools";
 import { z } from "zod";
-import { resolve } from "../lib/container.ts";
+import { resolve } from "#lib/container";
 import { SaveNoteService } from "#core/services/notes/save-note.service";
-import { env } from "../lib/env.ts";
-import { getGroupCaller, NOT_IN_GROUP_ERROR } from "../lib/telegram/group-caller.ts";
+import { env } from "#lib/env";
+import { getGroupCaller, NOT_IN_GROUP_ERROR } from "#lib/telegram/group-caller";
 
 export default defineTool({
   description:

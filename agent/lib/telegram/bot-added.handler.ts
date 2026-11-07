@@ -2,18 +2,26 @@
 // anyone can add the bot, and whoever adds it becomes an admin member of the chat's group.
 
 import type { TelegramMessage } from "eve/channels/telegram";
-import type { Logger } from "../logger.ts";
+import type { Logger } from "#lib/logger";
 import type { GroupOnboardingService } from "#core/services/groups/group-onboarding.service";
-import type { TelegramGateway } from "./telegram.gateway.ts";
+import type { LocalizedMessageService } from "#core/services/translations/localized-message.service";
+import type { TelegramGateway } from "#lib/telegram/telegram.gateway";
+import { toTelegramProfile } from "#lib/telegram/telegram-profile";
 
 type RawChatMember = { is_bot?: boolean; username?: string };
 
 export class BotAddedHandler {
   private readonly groupOnboardingService: GroupOnboardingService;
+  private readonly localizedMessageService: LocalizedMessageService;
   private readonly logger: Logger;
 
-  constructor(groupOnboardingService: GroupOnboardingService, logger: Logger) {
+  constructor(
+    groupOnboardingService: GroupOnboardingService,
+    localizedMessageService: LocalizedMessageService,
+    logger: Logger,
+  ) {
     this.groupOnboardingService = groupOnboardingService;
+    this.localizedMessageService = localizedMessageService;
     this.logger = logger;
   }
 
@@ -32,10 +40,12 @@ export class BotAddedHandler {
       return true;
     }
 
-    const result = await this.groupOnboardingService.registerChat(
-      { telegramId: from.id, username: from.username, firstName: from.firstName },
-      { chatId: message.chat.id, title: message.chat.title ?? null, type: chatType },
-    );
+    const profile = toTelegramProfile(from);
+    const result = await this.groupOnboardingService.registerChat(profile, {
+      chatId: message.chat.id,
+      title: message.chat.title ?? null,
+      type: chatType,
+    });
 
     const group = "created" in result ? result.created : result.existing;
     this.logger.info({ chatId: message.chat.id, userId: from.id, groupId: group.id }, "bot added to chat");
@@ -43,11 +53,7 @@ export class BotAddedHandler {
     const mention = botUsername ? `@${botUsername}` : "me";
 
     await telegram.send(
-      [
-        "Hi everyone! I'm your group assistant: I help you plan events, split tasks and costs, make decisions, and keep lists.",
-        `To talk to me, mention ${mention} or reply to one of my messages.`,
-        `My admins (whoever added me to this chat) can also tell me how to behave here, e.g. "${mention} always reply in English".`,
-      ].join("\n\n"),
+      await this.localizedMessageService.getMessage("group.welcome", profile.languageCode ?? null, { mention }),
     );
 
     return true;

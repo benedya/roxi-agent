@@ -5,7 +5,7 @@
 //      LOG_PRETTY  "true" for human-readable output in local dev (pino-pretty, dev dependency)
 
 import { pino, type Logger } from "pino";
-import { env } from "./env.ts";
+import { env } from "#lib/env";
 
 export type { Logger };
 

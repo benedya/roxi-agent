@@ -1,5 +1,5 @@
 import type { TelegramContext, TelegramMessage } from "eve/channels/telegram";
-import type { Logger } from "../logger.ts";
+import type { Logger } from "#lib/logger";
 
 /**
  * Bot API calls for one inbound message. Created per message (it wraps that

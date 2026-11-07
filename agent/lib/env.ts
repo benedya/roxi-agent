@@ -3,7 +3,7 @@
 // Scripts (scripts/*.ts) check their own variables: they need only a few of these.
 
 import { z } from "zod";
-import { MODEL_PROVIDERS } from "./helpers/model.ts";
+import { MODEL_PROVIDERS } from "#lib/helpers/model";
 
 const EnvSchema = z.object({
   // Each model use has its own provider and key, so usage and limits stay separate.

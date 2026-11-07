@@ -3,6 +3,8 @@ export type TelegramProfile = {
   telegramId: string;
   username?: string;
   firstName?: string;
+  /** Normalized primary language; Telegram doesn't always send one. */
+  languageCode?: string;
 };
 
 export type GroupChatType = "group" | "supergroup";

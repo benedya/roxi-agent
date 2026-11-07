@@ -1,12 +1,14 @@
 import { defaultTelegramAuth, type TelegramInboundResult, type TelegramMessage } from "eve/channels/telegram";
 import type { GroupAccessService } from "#core/services/groups/group-access.service";
 import type { GroupMembershipService } from "#core/services/groups/group-membership.service";
-import type { Logger } from "../logger.ts";
-import type { AssignmentAnswerHandler } from "./assignment-answer.handler.ts";
-import type { BotAddedHandler } from "./bot-added.handler.ts";
-import type { CancelCommandHandler } from "./cancel-command.handler.ts";
-import { isAddressedToBot } from "./addressing.ts";
-import type { TelegramGateway } from "./telegram.gateway.ts";
+import type { RecordUserLanguageService } from "#core/services/users/record-user-language.service";
+import type { Logger } from "#lib/logger";
+import type { AssignmentAnswerHandler } from "#lib/telegram/assignment-answer.handler";
+import type { BotAddedHandler } from "#lib/telegram/bot-added.handler";
+import type { CancelCommandHandler } from "#lib/telegram/cancel-command.handler";
+import { isAddressedToBot } from "#lib/telegram/addressing";
+import type { TelegramGateway } from "#lib/telegram/telegram.gateway";
+import { toTelegramProfile } from "#lib/telegram/telegram-profile";
 
 /**
  * Entry point for inbound Telegram messages. The bot joining a chat is handled in
@@ -23,6 +25,7 @@ export class TelegramMessageHandler {
   private readonly assignmentAnswerHandler: AssignmentAnswerHandler;
   private readonly groupAccessService: GroupAccessService;
   private readonly groupMembershipService: GroupMembershipService;
+  private readonly recordUserLanguageService: RecordUserLanguageService;
   private readonly logger: Logger;
 
   constructor(
@@ -31,6 +34,7 @@ export class TelegramMessageHandler {
     assignmentAnswerHandler: AssignmentAnswerHandler,
     groupAccessService: GroupAccessService,
     groupMembershipService: GroupMembershipService,
+    recordUserLanguageService: RecordUserLanguageService,
     logger: Logger,
   ) {
     this.botAddedHandler = botAddedHandler;
@@ -38,6 +42,7 @@ export class TelegramMessageHandler {
     this.assignmentAnswerHandler = assignmentAnswerHandler;
     this.groupAccessService = groupAccessService;
     this.groupMembershipService = groupMembershipService;
+    this.recordUserLanguageService = recordUserLanguageService;
     this.logger = logger;
   }
 
@@ -72,6 +77,8 @@ export class TelegramMessageHandler {
     }
 
     if (message.chat.type === "private") {
+      await this.recordUserLanguageService.record(from.id, from.languageCode);
+
       if (await this.cancelCommandHandler.handle(message, botUsername, telegram)) {
         return null;
       }
@@ -102,11 +109,7 @@ export class TelegramMessageHandler {
       return null;
     }
 
-    await this.groupMembershipService.recordInteraction(group.id, {
-      telegramId: from.id,
-      username: from.username,
-      firstName: from.firstName,
-    });
+    await this.groupMembershipService.recordInteraction(group.id, toTelegramProfile(from));
 
     await telegram.startTyping();
 
@@ -115,9 +118,7 @@ export class TelegramMessageHandler {
     return {
       // eve auth attributes are strings only.
       auth: { ...auth, attributes: { ...auth.attributes, group_id: String(group.id) } },
-      context: [
-        `<group_context>\ngroup_name: ${group.name}\nsettings: ${JSON.stringify(group.settings)}\n</group_context>`,
-      ],
+      context: [`<group_context>\ngroup_name: ${group.name}\n</group_context>`],
     };
   }
 }

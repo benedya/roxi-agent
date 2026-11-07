@@ -12,6 +12,7 @@ Anyone can install Roxi and run their own Telegram bot powered by it.
 - **Group instructions:** group admins can set how Roxi behaves in their chat, such as its tone, language, or response format. [See it in action](docs/examples/group-instructions.md)
 - **Notes:** members can ask Roxi to save notes and later remind them. Notes can be added, listed, searched, edited, and removed. [See it in action](docs/examples/notes.md)
 - **Assignments:** members can ask Roxi to give another member a set of questions or steps. Roxi sends them in a private chat and posts the result in the group. [See it in action](docs/examples/assignments.md)
+- **Your language:** Roxi replies in the language you write in. Its fixed messages follow your Telegram language and are translated automatically on first use.
 
 More features are coming.
 

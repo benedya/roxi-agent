@@ -6,6 +6,8 @@ export interface UserEntity {
   telegramId: string;
   username: string | null;
   firstName: string | null;
+  /** The primary language of the user's Telegram app (en, uk), for bot messages sent to them. */
+  languageCode: string | null;
   createdAt: Date;
 }
 
@@ -18,6 +20,7 @@ export const UserEntitySchema = new EntitySchema<UserEntity>({
     telegramId: { type: "bigint", name: "telegram_id", unique: true },
     username: { type: "text", nullable: true },
     firstName: { type: "text", name: "first_name", nullable: true },
+    languageCode: { type: "text", name: "language_code", nullable: true },
     createdAt: { type: "timestamptz", name: "created_at", createDate: true },
   },
 });

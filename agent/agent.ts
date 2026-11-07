@@ -1,6 +1,6 @@
 import { defineAgent } from "eve";
-import { createModel } from "./lib/helpers/model.ts";
-import { env } from "./lib/env.ts";
+import { createModel } from "#lib/helpers/model";
+import { env } from "#lib/env";
 
 export default defineAgent({
   // Calls the provider directly, with the agent's own API key.

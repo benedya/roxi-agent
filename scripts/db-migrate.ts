@@ -5,7 +5,7 @@
 // Env:   DATABASE_URL, APP_SCHEMA (optional) (from .env.local)
 
 // First: the schema module reads APP_SCHEMA when it loads.
-import "./load-env.ts";
+import "#scripts/load-env";
 import { createDataSource } from "#core/db/data-source";
 import { APP_SCHEMA } from "#core/db/schema";
 
