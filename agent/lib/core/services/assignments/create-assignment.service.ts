@@ -1,11 +1,12 @@
 import type { DataSource } from "typeorm";
 import type { Logger } from "pino";
-import { formatAssignmentIntro, formatGroupName, formatUserName } from "#core/helpers/assignment-format";
+import { formatGroupName, formatUserName } from "#core/helpers/assignment-format";
 import { findMatchingMembers } from "#core/helpers/member-match";
 import type { AssignmentRepository } from "#core/repositories/assignment.repository";
 import type { AssignmentItemRepository } from "#core/repositories/assignment-item.repository";
 import type { GroupRepository } from "#core/repositories/group.repository";
 import type { UserRepository } from "#core/repositories/user.repository";
+import type { AssignmentMessagesService } from "#core/services/assignments/assignment-messages.service";
 import type { SendAssignmentItemService } from "#core/services/assignments/send-assignment-item.service";
 import type { CreateAssignmentInput, CreateAssignmentResult } from "#core/types/assignment";
 import type { TelegramSender } from "#core/types/telegram";
@@ -25,6 +26,7 @@ export class CreateAssignmentService {
   private readonly groupRepository: GroupRepository;
   private readonly assignmentRepository: AssignmentRepository;
   private readonly assignmentItemRepository: AssignmentItemRepository;
+  private readonly assignmentMessagesService: AssignmentMessagesService;
   private readonly sendAssignmentItemService: SendAssignmentItemService;
   private readonly telegramSender: TelegramSender;
   private readonly logger: Logger;
@@ -35,6 +37,7 @@ export class CreateAssignmentService {
     groupRepository: GroupRepository,
     assignmentRepository: AssignmentRepository,
     assignmentItemRepository: AssignmentItemRepository,
+    assignmentMessagesService: AssignmentMessagesService,
     sendAssignmentItemService: SendAssignmentItemService,
     telegramSender: TelegramSender,
     logger: Logger,
@@ -44,6 +47,7 @@ export class CreateAssignmentService {
     this.groupRepository = groupRepository;
     this.assignmentRepository = assignmentRepository;
     this.assignmentItemRepository = assignmentItemRepository;
+    this.assignmentMessagesService = assignmentMessagesService;
     this.sendAssignmentItemService = sendAssignmentItemService;
     this.telegramSender = telegramSender;
     this.logger = logger;
@@ -95,16 +99,14 @@ export class CreateAssignmentService {
 
     // The intro doubles as the reachability check: the Bot API can't tell whether a user started
     // the bot without messaging them. Saved first, so an answer can't arrive before the assignment exists.
+    const introText = await this.assignmentMessagesService.getIntro(assignee.languageCode, {
+      assignerName: formatUserName(assigner),
+      groupName: formatGroupName(group),
+      title: input.title,
+      itemCount: input.items.length,
+    });
     const intro = await this.telegramSender
-      .send({
-        chatId: assignee.telegramId,
-        text: formatAssignmentIntro({
-          assignerName: formatUserName(assigner),
-          groupName: formatGroupName(group),
-          title: input.title,
-          itemCount: input.items.length,
-        }),
-      })
+      .send({ chatId: assignee.telegramId, text: introText })
       .catch(async (error: unknown) => {
         await this.assignmentRepository.delete(assignmentId);
         throw error;

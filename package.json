@@ -5,6 +5,8 @@
   "imports": {
     "#*": "./agent/*",
     "#core/*": "./agent/lib/core/*.ts",
+    "#lib/*": "./agent/lib/*.ts",
+    "#scripts/*": "./scripts/*.ts",
     "#evals/*": "./evals/*"
   },
   "scripts": {

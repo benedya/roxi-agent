@@ -1,11 +1,11 @@
 import { defineTool } from "eve/tools";
 import { z } from "zod";
-import { resolve } from "../lib/container.ts";
+import { resolve } from "#lib/container";
 import {
   CUSTOM_INSTRUCTIONS_MAX_LENGTH,
   UpdateGroupInstructionsService,
 } from "#core/services/groups/update-group-instructions.service";
-import { getGroupCaller } from "../lib/telegram/group-caller.ts";
+import { getGroupCaller } from "#lib/telegram/group-caller";
 
 export default defineTool({
   description:

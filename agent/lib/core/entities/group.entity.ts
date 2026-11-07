@@ -2,16 +2,9 @@ import { EntitySchema } from "typeorm";
 import { APP_SCHEMA } from "#core/db/schema";
 import type { GroupChatType } from "#core/types/telegram";
 
-export interface GroupSettings {
-  language?: string;
-  timezone?: string;
-  features?: string[];
-}
-
 export interface GroupEntity {
   id: number;
   name: string;
-  settings: GroupSettings;
   createdAt: Date;
   /** The group's Telegram chat, set when the bot is added to it. */
   telegramChatId: string | null;
@@ -29,7 +22,6 @@ export const GroupEntitySchema = new EntitySchema<GroupEntity>({
   columns: {
     id: { type: "integer", primary: true, generated: "increment" },
     name: { type: "text" },
-    settings: { type: "jsonb", default: {} },
     createdAt: { type: "timestamptz", name: "created_at", createDate: true },
     telegramChatId: { type: "bigint", name: "telegram_chat_id", nullable: true, unique: true },
     chatTitle: { type: "text", name: "chat_title", nullable: true },

@@ -2,9 +2,9 @@
 // from the next message. Added after instructions.md, which they may adjust but not override.
 
 import { defineDynamic, defineInstructions } from "eve/instructions";
-import { resolve } from "../lib/container.ts";
+import { resolve } from "#lib/container";
 import { FindGroupInstructionsService } from "#core/services/groups/find-group-instructions.service";
-import { getGroupCaller } from "../lib/telegram/group-caller.ts";
+import { getGroupCaller } from "#lib/telegram/group-caller";
 
 export default defineDynamic({
   events: {

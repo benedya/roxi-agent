@@ -1,12 +1,8 @@
 import type { Logger } from "pino";
-import {
-  formatAssignmentCancelled,
-  formatAssignmentCancelledResult,
-  formatGroupName,
-  formatUserName,
-} from "#core/helpers/assignment-format";
+import { formatGroupName, formatUserName } from "#core/helpers/assignment-format";
 import type { AssignmentRepository } from "#core/repositories/assignment.repository";
 import type { AssignmentItemRepository } from "#core/repositories/assignment-item.repository";
+import type { AssignmentMessagesService } from "#core/services/assignments/assignment-messages.service";
 import type { NotifyAssignmentClosedService } from "#core/services/assignments/notify-assignment-closed.service";
 
 type CancelAssignmentResult = "cancelled" | "nothing_to_cancel";
@@ -15,17 +11,20 @@ type CancelAssignmentResult = "cancelled" | "nothing_to_cancel";
 export class CancelAssignmentService {
   private readonly assignmentRepository: AssignmentRepository;
   private readonly assignmentItemRepository: AssignmentItemRepository;
+  private readonly assignmentMessagesService: AssignmentMessagesService;
   private readonly notifyAssignmentClosedService: NotifyAssignmentClosedService;
   private readonly logger: Logger;
 
   constructor(
     assignmentRepository: AssignmentRepository,
     assignmentItemRepository: AssignmentItemRepository,
+    assignmentMessagesService: AssignmentMessagesService,
     notifyAssignmentClosedService: NotifyAssignmentClosedService,
     logger: Logger,
   ) {
     this.assignmentRepository = assignmentRepository;
     this.assignmentItemRepository = assignmentItemRepository;
+    this.assignmentMessagesService = assignmentMessagesService;
     this.notifyAssignmentClosedService = notifyAssignmentClosedService;
     this.logger = logger;
   }
@@ -45,8 +44,16 @@ export class CancelAssignmentService {
     const items = await this.assignmentItemRepository.findByAssignment(assignment.id);
 
     await this.notifyAssignmentClosedService.notify(assignment, {
-      assignee: formatAssignmentCancelled(formatGroupName(assignment.group)),
-      group: formatAssignmentCancelledResult(formatUserName(assignment.assignee), assignment.title, items),
+      assignee: await this.assignmentMessagesService.getCancelled(
+        assignment.assignee.languageCode,
+        formatGroupName(assignment.group),
+      ),
+      group: await this.assignmentMessagesService.getCancelledResult(
+        assignment.assigner.languageCode,
+        formatUserName(assignment.assignee),
+        assignment.title,
+        items,
+      ),
     });
 
     this.logger.info({ assignmentId: assignment.id, groupId: assignment.groupId }, "assignment cancelled");

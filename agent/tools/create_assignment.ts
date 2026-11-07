@@ -1,13 +1,13 @@
 import { defineTool } from "eve/tools";
 import { z } from "zod";
-import { resolve } from "../lib/container.ts";
+import { resolve } from "#lib/container";
 import {
   ASSIGNMENT_ITEM_MAX_LENGTH,
   ASSIGNMENT_MAX_ITEMS,
   ASSIGNMENT_TITLE_MAX_LENGTH,
   CreateAssignmentService,
 } from "#core/services/assignments/create-assignment.service";
-import { getGroupCaller } from "../lib/telegram/group-caller.ts";
+import { getGroupCaller } from "#lib/telegram/group-caller";
 
 export default defineTool({
   description:

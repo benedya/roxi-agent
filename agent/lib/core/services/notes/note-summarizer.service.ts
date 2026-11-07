@@ -2,9 +2,9 @@
 // one-line summary in place of the full content.
 
 import { generateText } from "ai";
-import { env } from "../../../env.ts";
-import type { Logger } from "../../../logger.ts";
-import { createModel } from "../../../helpers/model.ts";
+import { env } from "#lib/env";
+import type { Logger } from "#lib/logger";
+import { createModel } from "#lib/helpers/model";
 import { collapseWhitespace, truncate } from "#core/helpers/text";
 
 const model = createModel(env.NOTE_SUMMARY_MODEL_PROVIDER, env.NOTE_SUMMARY_MODEL, env.NOTE_SUMMARY_MODEL_API_KEY);

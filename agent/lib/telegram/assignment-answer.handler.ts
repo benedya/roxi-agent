@@ -2,7 +2,7 @@
 // /cancel is an answer: it is handled in code and never reaches the agent.
 
 import type { TelegramMessage } from "eve/channels/telegram";
-import type { Logger } from "../logger.ts";
+import type { Logger } from "#lib/logger";
 import type { RecordAnswerService } from "#core/services/assignments/record-answer.service";
 
 export class AssignmentAnswerHandler {

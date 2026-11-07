@@ -1,6 +1,6 @@
 import type { DataSource } from "typeorm";
 import type { GroupEntity } from "#core/entities/group.entity";
-import type { Logger } from "../../../logger.ts";
+import type { Logger } from "#lib/logger";
 import type { GroupRepository } from "#core/repositories/group.repository";
 import type { GroupMemberRepository } from "#core/repositories/group-member.repository";
 import type { UserRepository } from "#core/repositories/user.repository";

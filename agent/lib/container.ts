@@ -19,6 +19,10 @@ import { NoteContentService, SUMMARY_MAX_LENGTH } from "#core/services/notes/not
 import { NoteSummarizerService } from "#core/services/notes/note-summarizer.service";
 import { SaveNoteService } from "#core/services/notes/save-note.service";
 import { SearchNotesService } from "#core/services/notes/search-notes.service";
+import { LocalizedMessageService } from "#core/services/translations/localized-message.service";
+import { MessageTranslatorService } from "#core/services/translations/message-translator.service";
+import { RecordUserLanguageService } from "#core/services/users/record-user-language.service";
+import { AssignmentMessagesService } from "#core/services/assignments/assignment-messages.service";
 import { CancelAssignmentService } from "#core/services/assignments/cancel-assignment.service";
 import { CompleteAssignmentService } from "#core/services/assignments/complete-assignment.service";
 import { NotifyAssignmentClosedService } from "#core/services/assignments/notify-assignment-closed.service";
@@ -27,18 +31,19 @@ import { RecordAnswerService } from "#core/services/assignments/record-answer.se
 import { SendAssignmentItemService } from "#core/services/assignments/send-assignment-item.service";
 import { AssignmentRepository } from "#core/repositories/assignment.repository";
 import { AssignmentItemRepository } from "#core/repositories/assignment-item.repository";
-import { AssignmentAnswerHandler } from "./telegram/assignment-answer.handler.ts";
-import { BotAddedHandler } from "./telegram/bot-added.handler.ts";
-import { CancelCommandHandler } from "./telegram/cancel-command.handler.ts";
-import { TelegramBotApi } from "./telegram/telegram-bot-api.ts";
+import { AssignmentAnswerHandler } from "#lib/telegram/assignment-answer.handler";
+import { BotAddedHandler } from "#lib/telegram/bot-added.handler";
+import { CancelCommandHandler } from "#lib/telegram/cancel-command.handler";
+import { TelegramBotApi } from "#lib/telegram/telegram-bot-api";
 import { GroupOnboardingService } from "#core/services/groups/group-onboarding.service";
 import { GroupRepository } from "#core/repositories/group.repository";
 import { GroupMemberRepository } from "#core/repositories/group-member.repository";
 import { NoteRepository } from "#core/repositories/note.repository";
+import { TranslationRepository } from "#core/repositories/translation.repository";
 import { UserRepository } from "#core/repositories/user.repository";
-import { TelegramMessageHandler } from "./telegram/telegram-message.handler.ts";
-import { createLogger, LOGGER, type Logger } from "./logger.ts";
-import { env } from "./env.ts";
+import { TelegramMessageHandler } from "#lib/telegram/telegram-message.handler";
+import { createLogger, LOGGER, type Logger } from "#lib/logger";
+import { env } from "#lib/env";
 
 export function createContainer(): Container {
   const container = new Container({ defaultScope: "Singleton" });
@@ -59,8 +64,45 @@ export function createContainer(): Container {
   container
     .bind(AssignmentItemRepository)
     .toResolvedValue((m: EntityManager) => new AssignmentItemRepository(m), [EntityManager]);
+  container
+    .bind(TranslationRepository)
+    .toResolvedValue((m: EntityManager) => new TranslationRepository(m), [EntityManager]);
 
   container.bind(TelegramBotApi).toResolvedValue(() => new TelegramBotApi(env.TELEGRAM_BOT_TOKEN));
+
+  container
+    .bind(MessageTranslatorService)
+    .toResolvedValue(
+      (logger: Logger) => new MessageTranslatorService(logger.child({ module: "MessageTranslatorService" })),
+      [LOGGER],
+    );
+  container
+    .bind(LocalizedMessageService)
+    .toResolvedValue(
+      (
+        translationRepository: TranslationRepository,
+        messageTranslatorService: MessageTranslatorService,
+        logger: Logger,
+      ) =>
+        new LocalizedMessageService(
+          translationRepository,
+          messageTranslatorService,
+          logger.child({ module: "LocalizedMessageService" }),
+        ),
+      [TranslationRepository, MessageTranslatorService, LOGGER],
+    );
+  container
+    .bind(AssignmentMessagesService)
+    .toResolvedValue(
+      (localizedMessageService: LocalizedMessageService) => new AssignmentMessagesService(localizedMessageService),
+      [LocalizedMessageService],
+    );
+  container
+    .bind(RecordUserLanguageService)
+    .toResolvedValue(
+      (userRepository: UserRepository) => new RecordUserLanguageService(userRepository),
+      [UserRepository],
+    );
 
   container
     .bind(GroupAccessService)
@@ -181,6 +223,7 @@ export function createContainer(): Container {
         groupRepository: GroupRepository,
         assignmentRepository: AssignmentRepository,
         assignmentItemRepository: AssignmentItemRepository,
+        assignmentMessagesService: AssignmentMessagesService,
         sendAssignmentItemService: SendAssignmentItemService,
         telegramBotApi: TelegramBotApi,
         logger: Logger,
@@ -191,6 +234,7 @@ export function createContainer(): Container {
           groupRepository,
           assignmentRepository,
           assignmentItemRepository,
+          assignmentMessagesService,
           sendAssignmentItemService,
           telegramBotApi,
           logger.child({ module: "CreateAssignmentService" }),
@@ -201,6 +245,7 @@ export function createContainer(): Container {
         GroupRepository,
         AssignmentRepository,
         AssignmentItemRepository,
+        AssignmentMessagesService,
         SendAssignmentItemService,
         TelegramBotApi,
         LOGGER,
@@ -219,16 +264,18 @@ export function createContainer(): Container {
       (
         assignmentRepository: AssignmentRepository,
         assignmentItemRepository: AssignmentItemRepository,
+        assignmentMessagesService: AssignmentMessagesService,
         notifyAssignmentClosedService: NotifyAssignmentClosedService,
         logger: Logger,
       ) =>
         new CompleteAssignmentService(
           assignmentRepository,
           assignmentItemRepository,
+          assignmentMessagesService,
           notifyAssignmentClosedService,
           logger.child({ module: "CompleteAssignmentService" }),
         ),
-      [AssignmentRepository, AssignmentItemRepository, NotifyAssignmentClosedService, LOGGER],
+      [AssignmentRepository, AssignmentItemRepository, AssignmentMessagesService, NotifyAssignmentClosedService, LOGGER],
     );
   container
     .bind(CancelAssignmentService)
@@ -236,22 +283,25 @@ export function createContainer(): Container {
       (
         assignmentRepository: AssignmentRepository,
         assignmentItemRepository: AssignmentItemRepository,
+        assignmentMessagesService: AssignmentMessagesService,
         notifyAssignmentClosedService: NotifyAssignmentClosedService,
         logger: Logger,
       ) =>
         new CancelAssignmentService(
           assignmentRepository,
           assignmentItemRepository,
+          assignmentMessagesService,
           notifyAssignmentClosedService,
           logger.child({ module: "CancelAssignmentService" }),
         ),
-      [AssignmentRepository, AssignmentItemRepository, NotifyAssignmentClosedService, LOGGER],
+      [AssignmentRepository, AssignmentItemRepository, AssignmentMessagesService, NotifyAssignmentClosedService, LOGGER],
     );
   container
     .bind(CancelCommandHandler)
     .toResolvedValue(
-      (cancelAssignmentService: CancelAssignmentService) => new CancelCommandHandler(cancelAssignmentService),
-      [CancelAssignmentService],
+      (cancelAssignmentService: CancelAssignmentService, localizedMessageService: LocalizedMessageService) =>
+        new CancelCommandHandler(cancelAssignmentService, localizedMessageService),
+      [CancelAssignmentService, LocalizedMessageService],
     );
   container
     .bind(RecordAnswerService)
@@ -280,9 +330,9 @@ export function createContainer(): Container {
   container
     .bind(BotAddedHandler)
     .toResolvedValue(
-      (groupOnboardingService: GroupOnboardingService, logger: Logger) =>
-        new BotAddedHandler(groupOnboardingService, logger.child({ module: "BotAddedHandler" })),
-      [GroupOnboardingService, LOGGER],
+      (groupOnboardingService: GroupOnboardingService, localizedMessageService: LocalizedMessageService, logger: Logger) =>
+        new BotAddedHandler(groupOnboardingService, localizedMessageService, logger.child({ module: "BotAddedHandler" })),
+      [GroupOnboardingService, LocalizedMessageService, LOGGER],
     );
 
   container
@@ -294,6 +344,7 @@ export function createContainer(): Container {
         assignmentAnswerHandler: AssignmentAnswerHandler,
         groupAccessService: GroupAccessService,
         groupMembershipService: GroupMembershipService,
+        recordUserLanguageService: RecordUserLanguageService,
         logger: Logger,
       ) =>
         new TelegramMessageHandler(
@@ -302,9 +353,18 @@ export function createContainer(): Container {
           assignmentAnswerHandler,
           groupAccessService,
           groupMembershipService,
+          recordUserLanguageService,
           logger.child({ module: "TelegramMessageHandler" }),
         ),
-      [BotAddedHandler, CancelCommandHandler, AssignmentAnswerHandler, GroupAccessService, GroupMembershipService, LOGGER],
+      [
+        BotAddedHandler,
+        CancelCommandHandler,
+        AssignmentAnswerHandler,
+        GroupAccessService,
+        GroupMembershipService,
+        RecordUserLanguageService,
+        LOGGER,
+      ],
     );
 
   return container;
