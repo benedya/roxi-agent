@@ -17,6 +17,7 @@
     "start": "eve start",
     "typecheck": "tsc",
     "telegram:poll": "node scripts/telegram-poll.ts",
+    "dev:schedules": "node scripts/dev-schedules.ts",
     "db:migrate": "node scripts/db-migrate.ts",
     "lint": "biome lint",
     "lint:fix": "biome lint --write"
@@ -31,6 +32,7 @@
     "inversify": "^8.2.3",
     "pg": "^8.23.1",
     "pino": "^10.4.0",
+    "rrule": "^2.8.1",
     "typeorm": "^1.1.2",
     "zod": "4.5.4"
   },

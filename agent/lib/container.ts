@@ -10,6 +10,13 @@ import { GroupAccessService } from "#core/services/groups/group-access.service";
 import { FindGroupInstructionsService } from "#core/services/groups/find-group-instructions.service";
 import { GroupMembershipService } from "#core/services/groups/group-membership.service";
 import { UpdateGroupInstructionsService } from "#core/services/groups/update-group-instructions.service";
+import { FindGroupTimezoneService } from "#core/services/groups/find-group-timezone.service";
+import { SetGroupTimezoneService } from "#core/services/groups/set-group-timezone.service";
+import { CancelReminderService } from "#core/services/reminders/cancel-reminder.service";
+import { CreateReminderService } from "#core/services/reminders/create-reminder.service";
+import { DispatchDueRemindersService } from "#core/services/reminders/dispatch-due-reminders.service";
+import { ListRemindersService } from "#core/services/reminders/list-reminders.service";
+import { ReminderRepository } from "#core/repositories/reminder.repository";
 import { DeleteNoteService } from "#core/services/notes/delete-note.service";
 import { EditNoteService } from "#core/services/notes/edit-note.service";
 import { GetNoteService } from "#core/services/notes/get-note.service";
@@ -64,6 +71,9 @@ export function createContainer(): Container {
   container
     .bind(AssignmentItemRepository)
     .toResolvedValue((m: EntityManager) => new AssignmentItemRepository(m), [EntityManager]);
+  container
+    .bind(ReminderRepository)
+    .toResolvedValue((m: EntityManager) => new ReminderRepository(m), [EntityManager]);
   container
     .bind(TranslationRepository)
     .toResolvedValue((m: EntityManager) => new TranslationRepository(m), [EntityManager]);
@@ -122,6 +132,78 @@ export function createContainer(): Container {
       (groupRepository: GroupRepository, userRepository: UserRepository, groupMemberRepository: GroupMemberRepository) =>
         new UpdateGroupInstructionsService(groupRepository, userRepository, groupMemberRepository),
       [GroupRepository, UserRepository, GroupMemberRepository],
+    );
+  container
+    .bind(FindGroupTimezoneService)
+    .toResolvedValue(
+      (groupRepository: GroupRepository) => new FindGroupTimezoneService(groupRepository),
+      [GroupRepository],
+    );
+  container
+    .bind(SetGroupTimezoneService)
+    .toResolvedValue(
+      (
+        ds: DataSource,
+        groupRepository: GroupRepository,
+        userRepository: UserRepository,
+        groupMemberRepository: GroupMemberRepository,
+        reminderRepository: ReminderRepository,
+      ) => new SetGroupTimezoneService(ds, groupRepository, userRepository, groupMemberRepository, reminderRepository),
+      [DataSource, GroupRepository, UserRepository, GroupMemberRepository, ReminderRepository],
+    );
+  container
+    .bind(CreateReminderService)
+    .toResolvedValue(
+      (
+        groupRepository: GroupRepository,
+        userRepository: UserRepository,
+        reminderRepository: ReminderRepository,
+        logger: Logger,
+      ) =>
+        new CreateReminderService(
+          groupRepository,
+          userRepository,
+          reminderRepository,
+          env.MAX_REMINDERS_PER_GROUP,
+          logger.child({ module: "CreateReminderService" }),
+        ),
+      [GroupRepository, UserRepository, ReminderRepository, LOGGER],
+    );
+  container
+    .bind(ListRemindersService)
+    .toResolvedValue(
+      (groupRepository: GroupRepository, reminderRepository: ReminderRepository) =>
+        new ListRemindersService(groupRepository, reminderRepository),
+      [GroupRepository, ReminderRepository],
+    );
+  container
+    .bind(CancelReminderService)
+    .toResolvedValue(
+      (
+        reminderRepository: ReminderRepository,
+        userRepository: UserRepository,
+        groupMemberRepository: GroupMemberRepository,
+      ) => new CancelReminderService(reminderRepository, userRepository, groupMemberRepository),
+      [ReminderRepository, UserRepository, GroupMemberRepository],
+    );
+  container
+    .bind(DispatchDueRemindersService)
+    .toResolvedValue(
+      (
+        ds: DataSource,
+        reminderRepository: ReminderRepository,
+        localizedMessageService: LocalizedMessageService,
+        telegramBotApi: TelegramBotApi,
+        logger: Logger,
+      ) =>
+        new DispatchDueRemindersService(
+          ds,
+          reminderRepository,
+          localizedMessageService,
+          telegramBotApi,
+          logger.child({ module: "DispatchDueRemindersService" }),
+        ),
+      [DataSource, ReminderRepository, LocalizedMessageService, TelegramBotApi, LOGGER],
     );
   container
     .bind(NoteSummarizerService)

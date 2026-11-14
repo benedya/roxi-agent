@@ -13,13 +13,13 @@ AGENT_RUN_DB := $(COMPOSE) run --rm agent $(AGENT_CMD)
 # Which logs eve dev shows: none | error | warn | debug | all ("all" includes the app's pino logs).
 export EVE_LOGS ?= all
 
-.PHONY: run up down logs tui db-setup db-migrate db-shell install typecheck lint help
+.PHONY: run up down logs tui reset-sessions db-setup db-migrate db-shell install typecheck lint help
 
-## run: start Postgres, eve dev and the Telegram relay, following their logs (Ctrl-C stops them)
+## run: start Postgres, eve dev, the Telegram relay and the dev scheduler, following their logs (Ctrl-C stops them)
 run:
-	@$(COMPOSE) up --attach agent --attach telegram-poll
+	@$(COMPOSE) up --attach agent --attach telegram-poll --attach dev-schedules
 
-## up: start Postgres, eve dev and the Telegram relay in the background
+## up: start Postgres, eve dev, the Telegram relay and the dev scheduler in the background
 up:
 	@$(COMPOSE) up -d --wait
 	@echo "Agent is up (make logs, make tui, make down)"
@@ -28,13 +28,17 @@ up:
 down:
 	@$(COMPOSE) down
 
-## logs: follow the agent and relay logs
+## logs: follow the agent, relay and scheduler logs
 logs:
-	@$(COMPOSE) logs -f agent telegram-poll
+	@$(COMPOSE) logs -f agent telegram-poll dev-schedules
 
 ## tui: open the eve terminal UI against the running agent
 tui:
 	@$(COMPOSE) exec agent npx --no-install eve remote connect --url http://127.0.0.1:2000
+
+## reset-sessions: end every active session, so chats pick up code changes (drops their history)
+reset-sessions:
+	@$(COMPOSE) exec agent node scripts/reset-sessions.ts
 
 ## db-setup: create or migrate the session and app schemas (safe to run repeatedly)
 db-setup:
@@ -62,4 +66,4 @@ lint:
 
 ## help: list the available commands
 help:
-	@awk -F': ' '/^## / { printf "  %-12s %s\n", substr($$1, 4), substr($$0, length($$1) + 3) }' $(firstword $(MAKEFILE_LIST))
+	@awk -F': ' '/^## / { printf "  %-15s %s\n", substr($$1, 4), substr($$0, length($$1) + 3) }' $(firstword $(MAKEFILE_LIST))

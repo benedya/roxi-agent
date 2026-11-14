@@ -25,6 +25,7 @@ export const MESSAGES = {
   "assignment.result.answers": "Answers:",
   "assignment.result.mistake": "Answer: {answer}, expected: {expectedAnswer}",
   "assignment.result.answer": "Answer: {answer}",
+  "reminder.message": "⏰ Reminder from {creatorName}: {text}",
 } as const;
 
 export type MessageKey = keyof typeof MESSAGES;

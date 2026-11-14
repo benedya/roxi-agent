@@ -72,6 +72,13 @@ To adjust when compaction happens, set `COMPACTION_THRESHOLD_PERCENT` in `.env.l
 | Lower | Compacts sooner: less history is sent on each turn, so turns use fewer tokens, but less of the conversation is kept word for word |
 | Higher | Compacts later: more of the conversation is kept word for word, but turns use more tokens |
 
+### Local development
+
+`make run` starts the agent with `eve dev`, which behaves differently from a production build in two ways:
+
+- **Code changes don't reach existing chats.** Each session keeps running the code it started with. After changing the code, run `make reset-sessions` to end all active sessions; the next message in each chat starts a fresh one on the new code. This clears each chat's conversation history, but saved data (notes, assignments, reminders) stays.
+- **Schedules don't run on their own.** `eve dev` never fires schedules, so the `dev-schedules` container triggers them every minute instead (`scripts/dev-schedules.ts`). This is what sends reminders locally. Production builds run schedules themselves.
+
 ## Built with
 
 Roxi is built with [eve](https://eve.dev), a framework for building AI agents.
