@@ -13,6 +13,8 @@ export interface GroupEntity {
   linkedAt: Date | null;
   /** Admin-written instructions that adjust the agent's behavior in this group's chat. */
   customInstructions: string | null;
+  /** IANA time zone (Europe/Kyiv) for wall-clock reminder times; set by an admin. */
+  timezone: string | null;
 }
 
 export const GroupEntitySchema = new EntitySchema<GroupEntity>({
@@ -28,6 +30,7 @@ export const GroupEntitySchema = new EntitySchema<GroupEntity>({
     chatType: { type: "text", name: "chat_type", nullable: true },
     linkedAt: { type: "timestamptz", name: "linked_at", nullable: true },
     customInstructions: { type: "text", name: "custom_instructions", nullable: true },
+    timezone: { type: "text", nullable: true },
   },
   checks: [
     { name: "groups_chat_type_check", expression: `chat_type IN ('group', 'supergroup')` },

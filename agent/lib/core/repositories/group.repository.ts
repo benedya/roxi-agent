@@ -50,6 +50,10 @@ export class GroupRepository {
     await this.manager.update(GroupEntitySchema, { id }, { customInstructions });
   }
 
+  async updateTimezone(id: number, timezone: string): Promise<void> {
+    await this.manager.update(GroupEntitySchema, { id }, { timezone });
+  }
+
   /**
    * Inserts a group linked to the chat; returns null when the chat
    * already has a group (groups_telegram_chat_id_key).

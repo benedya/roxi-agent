@@ -88,6 +88,23 @@ services:
     labels:
       com.roxi-agent.service: telegram-poll
 
+  # Fires schedules every minute (scripts/dev-schedules.ts): eve dev never runs them on its own.
+  dev-schedules:
+    image: node:24-slim
+    container_name: roxi-agent-dev-schedules
+    working_dir: /app
+    restart: unless-stopped
+    depends_on:
+      agent:
+        condition: service_healthy
+    environment:
+      EVE_URL: http://agent:2000
+    command: ["node", "scripts/dev-schedules.ts"]
+    volumes:
+      - .:/app
+    labels:
+      com.roxi-agent.service: dev-schedules
+
 volumes:
   postgres-data:
     name: roxi-agent-postgres-data

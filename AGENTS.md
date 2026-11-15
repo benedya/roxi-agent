@@ -2,6 +2,10 @@
 
 This project uses the eve framework. Before authoring tools, connections, channels, skills, subagents, schedules, or deployment, read the relevant page in `node_modules/eve/docs` (start with `README.md`, or https://eve.dev/docs).
 
+## Skills
+
+Project skills live under `.agents/skills/`. Before starting a task, check whether a skill there covers it, and if so, read its `SKILL.md` first.
+
 ## Code structure
 
 Business logic lives under `agent/lib/core/`:

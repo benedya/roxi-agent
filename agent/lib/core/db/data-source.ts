@@ -10,6 +10,7 @@ import { AssignmentItemEntitySchema } from "#core/entities/assignment-item.entit
 import { GroupEntitySchema } from "#core/entities/group.entity";
 import { GroupMemberEntitySchema } from "#core/entities/group-member.entity";
 import { NoteEntitySchema } from "#core/entities/note.entity";
+import { ReminderEntitySchema } from "#core/entities/reminder.entity";
 import { TranslationEntitySchema } from "#core/entities/translation.entity";
 import { UserEntitySchema } from "#core/entities/user.entity";
 import { APP_SCHEMA } from "#core/db/schema";
@@ -30,6 +31,7 @@ export function createDataSource(url = process.env.DATABASE_URL): DataSource {
       AssignmentEntitySchema,
       AssignmentItemEntitySchema,
       TranslationEntitySchema,
+      ReminderEntitySchema,
     ],
     migrations: [`${import.meta.dirname}/migrations/*.ts`],
     migrationsTableName: "migrations",

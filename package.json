@@ -17,9 +17,11 @@
     "start": "eve start",
     "typecheck": "tsc",
     "telegram:poll": "node scripts/telegram-poll.ts",
+    "dev:schedules": "node scripts/dev-schedules.ts",
     "db:migrate": "node scripts/db-migrate.ts",
     "lint": "biome lint",
-    "lint:fix": "biome lint --write"
+    "lint:fix": "biome lint --write",
+    "test": "jest"
   },
   "dependencies": {
     "@ai-sdk/deepseek": "^3.0.62",
@@ -31,13 +33,18 @@
     "inversify": "^8.2.3",
     "pg": "^8.23.1",
     "pino": "^10.4.0",
+    "rrule": "^2.8.1",
     "typeorm": "^1.1.2",
     "zod": "4.5.4"
   },
   "devDependencies": {
     "@biomejs/biome": "2.6.2",
+    "@jest/globals": "^30.5.2",
+    "@swc/core": "^1.16.22",
+    "@swc/jest": "^0.2.39",
     "@types/node": "24.x",
     "@types/pg": "^8.23.1",
+    "jest": "^30.5.2",
     "just-bash": "^3.6.0",
     "pino-pretty": "^13.2.0",
     "typescript": "7.0.2"
