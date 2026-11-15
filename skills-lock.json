@@ -1,0 +1,11 @@
+{
+  "version": 2,
+  "skills": {
+    "testing-principles": {
+      "source": "benedya/skills",
+      "sourceType": "github",
+      "skillPath": "skills/testing-principles/SKILL.md",
+      "computedHash": "25412d3f051ca36b278158d93a3881bff6bb26a50d3cfefb8ee5b358acd6d1ce"
+    }
+  }
+}
